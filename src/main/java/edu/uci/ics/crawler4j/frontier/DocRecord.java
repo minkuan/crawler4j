@@ -3,6 +3,10 @@
  */
 package edu.uci.ics.crawler4j.frontier;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -37,6 +41,16 @@ public class DocRecord {
 
   /**  */
   private long     gmtModified;
+
+  /**
+   * 
+   */
+  public void assertValid() {
+    assertTrue(toString(), getId() > 0 && isNotBlank(getUrl()));
+    assertTrue(toString(),
+      ((getParentId() > 0 && isNotBlank(getParentUrl())) || (getParentId() <= 0 && isBlank(this
+        .getParentUrl()))));
+  }
 
   /**
    * Getter method for property <tt>id</tt>.

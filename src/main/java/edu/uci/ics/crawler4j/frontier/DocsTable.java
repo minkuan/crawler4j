@@ -3,6 +3,8 @@
  */
 package edu.uci.ics.crawler4j.frontier;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -12,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 
 /**
  * 
@@ -87,14 +90,16 @@ public class DocsTable {
    * @return
    * @throws SQLException
    */
-  public static final DocRecord queryByUrl(final String url, Connection conn, Object tableName)
-                                                                                               throws SQLException {
+  public static final DocRecord queryByUrl(final String url, Connection conn, final String tableName)
+                                                                                                     throws SQLException {
+    assertTrue(format("tableName:%s,url:%s", tableName, url), isNotBlank(url) && conn != null
+                                                              && tableName != null);
+
     Statement stmt = null;
     ResultSet rs = null;
     try {
       stmt = conn.createStatement();
-      rs = stmt.executeQuery(String.format("SELECT %s,%s,%s,%s,%s FROM %s WHERE URL=%s", COL_ID_0,
-        COL_URL_1, COL_PARENT_ID_2, COL_PARENT_URL_3, COL_DEPTH_4, tableName, COL_URL_1));
+      rs = stmt.executeQuery(String.format("SELECT * FROM %s WHERE URL=%s", tableName, url));
       while (rs.next()) {
         return new DocRecord().fillId(rs.getInt(0)).fillUrl(rs.getString(1))
           .fillParentId(rs.getInt(2)).fillParentUrl(rs.getString(3)).fillDepth(rs.getInt(4));
@@ -116,11 +121,8 @@ public class DocsTable {
    */
   public static void insertDoc(final Connection conn, final DocRecord doc) throws SQLException {
 
-    assertTrue(doc.toString(),
-      doc != null && doc.getId() > 0 && StringUtils.isNotBlank(doc.getUrl()));
-    assertTrue(doc.toString(), ((doc.getParentId() > 0 && StringUtils
-      .isNotBlank(doc.getParentUrl())) || (doc.getParentId() <= 0 && StringUtils.isBlank(doc
-      .getParentUrl()))));
+    Assert.assertTrue(conn != null && doc != null);
+    doc.assertValid();
 
     Statement stmt = null;
     int rc = -1;

@@ -1,18 +1,18 @@
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package edu.uci.ics.crawler4j.crawler;
@@ -29,19 +29,13 @@ import com.sleepycat.je.EnvironmentConfig;
 
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.frontier.DocIDServer;
+import edu.uci.ics.crawler4j.frontier.DocRecord;
 import edu.uci.ics.crawler4j.frontier.Frontier;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
 import edu.uci.ics.crawler4j.url.TLDList;
 import edu.uci.ics.crawler4j.url.URLCanonicalizer;
 import edu.uci.ics.crawler4j.url.WebURL;
 import edu.uci.ics.crawler4j.util.IO;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The controller that manages a crawling session. This class creates the
@@ -51,41 +45,41 @@ import java.util.List;
  */
 public class CrawlController extends Configurable {
 
-  static final Logger logger = LoggerFactory.getLogger(CrawlController.class);
+  static final Logger         logger            = LoggerFactory.getLogger(CrawlController.class);
 
   /**
    * The 'customData' object can be used for passing custom crawl-related
    * configurations to different components of the crawler.
    */
-  protected Object customData;
+  protected Object            customData;
 
   /**
    * Once the crawling session finishes the controller collects the local data
    * of the crawler threads and stores them in this List.
    */
-  protected List<Object> crawlersLocalData = new ArrayList<>();
+  protected List<Object>      crawlersLocalData = new ArrayList<>();
 
   /**
    * Is the crawling of this session finished?
    */
-  protected boolean finished;
+  protected boolean           finished;
 
   /**
    * Is the crawling session set to 'shutdown'. Crawler threads monitor this
    * flag and when it is set they will no longer process new pages.
    */
-  protected boolean shuttingDown;
+  protected boolean           shuttingDown;
 
-  protected PageFetcher pageFetcher;
-  protected RobotstxtServer robotstxtServer;
-  protected Frontier frontier;
-  protected DocIDServer docIdServer;
+  protected PageFetcher       pageFetcher;
+  protected RobotstxtServer   robotstxtServer;
+  protected Frontier          frontier;
+  protected DocIDServer       docIdServer;
 
-  protected final Object waitingLock = new Object();
+  protected final Object      waitingLock       = new Object();
   protected final Environment env;
 
-  public CrawlController(CrawlConfig config, PageFetcher pageFetcher, RobotstxtServer robotstxtServer)
-      throws Exception {
+  public CrawlController(CrawlConfig config, PageFetcher pageFetcher,
+                         RobotstxtServer robotstxtServer) throws Exception {
     super(config);
 
     config.validate();
@@ -94,8 +88,8 @@ public class CrawlController extends Configurable {
       if (folder.mkdirs()) {
         logger.debug("Created folder: " + folder.getAbsolutePath());
       } else {
-        throw new Exception(
-            "couldn't create the storage folder: " + folder.getAbsolutePath() + " does it already exist ?");
+        throw new Exception("couldn't create the storage folder: " + folder.getAbsolutePath()
+                            + " does it already exist ?");
       }
     }
 
@@ -119,7 +113,8 @@ public class CrawlController extends Configurable {
 
     if (!resumable) {
       IO.deleteFolderContents(envHome);
-      logger.info("Deleted contents of: " + envHome + " ( as you have configured resumable crawling to false )");
+      logger.info("Deleted contents of: " + envHome
+                  + " ( as you have configured resumable crawling to false )");
     }
 
     env = new Environment(envHome, envConfig);
@@ -137,7 +132,8 @@ public class CrawlController extends Configurable {
     T newInstance() throws Exception;
   }
 
-  private static class DefaultWebCrawlerFactory<T extends WebCrawler> implements WebCrawlerFactory<T> {
+  private static class DefaultWebCrawlerFactory<T extends WebCrawler> implements
+                                                                      WebCrawlerFactory<T> {
     final Class<T> _c;
 
     DefaultWebCrawlerFactory(Class<T> _c) {
@@ -179,7 +175,8 @@ public class CrawlController extends Configurable {
    *            this crawling session.
    * @param <T> Your class extending WebCrawler
    */
-  public <T extends WebCrawler> void start(final WebCrawlerFactory<T> crawlerFactory, final int numberOfCrawlers) {
+  public <T extends WebCrawler> void start(final WebCrawlerFactory<T> crawlerFactory,
+                                           final int numberOfCrawlers) {
     this.start(crawlerFactory, numberOfCrawlers, true);
   }
 
@@ -193,7 +190,8 @@ public class CrawlController extends Configurable {
    *            this crawling session.
    * @param <T> Your class extending WebCrawler
    */
-  public <T extends WebCrawler> void startNonBlocking(WebCrawlerFactory<T> crawlerFactory, final int numberOfCrawlers) {
+  public <T extends WebCrawler> void startNonBlocking(WebCrawlerFactory<T> crawlerFactory,
+                                                      final int numberOfCrawlers) {
     this.start(crawlerFactory, numberOfCrawlers, false);
   }
 
@@ -212,7 +210,8 @@ public class CrawlController extends Configurable {
     this.start(new DefaultWebCrawlerFactory<>(_c), numberOfCrawlers, false);
   }
 
-  protected <T extends WebCrawler> void start(final WebCrawlerFactory<T> crawlerFactory, final int numberOfCrawlers, boolean isBlocking) {
+  protected <T extends WebCrawler> void start(final WebCrawlerFactory<T> crawlerFactory,
+                                              final int numberOfCrawlers, boolean isBlocking) {
     try {
       finished = false;
       crawlersLocalData.clear();
@@ -266,7 +265,8 @@ public class CrawlController extends Configurable {
                   // Make sure again that none of the threads
                   // are
                   // alive.
-                  logger.info("It looks like no thread is working, waiting for 10 seconds to make sure...");
+                  logger
+                    .info("It looks like no thread is working, waiting for 10 seconds to make sure...");
                   sleep(10);
 
                   someoneIsWorking = false;
@@ -282,9 +282,9 @@ public class CrawlController extends Configurable {
                       if (queueLength > 0) {
                         continue;
                       }
-                      logger.info(
-                          "No thread is working and no more URLs are in queue waiting for another 10 seconds to make " +
-                          "sure...");
+                      logger
+                        .info("No thread is working and no more URLs are in queue waiting for another 10 seconds to make "
+                              + "sure...");
                       sleep(10);
                       queueLength = frontier.getQueueLength();
                       if (queueLength > 0) {
@@ -378,7 +378,7 @@ public class CrawlController extends Configurable {
    *            the URL of the seed
    */
   public void addSeed(String pageUrl) {
-    addSeed(pageUrl, -1);
+    addSeed(new DocRecord().fillUrl(pageUrl));
   }
 
   /**
@@ -400,21 +400,26 @@ public class CrawlController extends Configurable {
    *            the document id that you want to be assigned to this seed URL.
    *
    */
-  public void addSeed(String pageUrl, int docId) {
-    String canonicalUrl = URLCanonicalizer.getCanonicalURL(pageUrl);
+  public void addSeed(final DocRecord doc) {
+    String canonicalUrl = URLCanonicalizer.getCanonicalURL(doc.getUrl());
     if (canonicalUrl == null) {
-      logger.error("Invalid seed URL: {}", pageUrl);
+      logger.error("Invalid seed URL: {}", doc.getUrl());
     } else {
-      if (docId < 0) {
-        docId = docIdServer.getDocId(canonicalUrl);
-        if (docId > 0) {
+      doc.fillUrl(canonicalUrl);
+      DocRecord _doc = null;
+      if (doc.getId() < 0) {
+        _doc = docIdServer.getDocRecord(doc.getUrl());
+        // TODO 已下载内容也可能需要更新（比如index.html新加内嵌链接）
+        // 这就要求docId存在时，判断它的时间戳。另外“深度优先”还要求判断深度或parentUrl。因此BDB不适合用于存储frontier。
+        if (_doc.getId() > 0) {
           logger.trace("This URL is already seen.");
           return;
         }
-        docId = docIdServer.getNewDocID(canonicalUrl);
+        _doc = docIdServer.genNewDocRecordIfNotExists(doc);
+        doc.fillId(_doc.getId());
       } else {
         try {
-          docIdServer.addUrlAndDocId(canonicalUrl, docId);
+          docIdServer.addUrlAndDocId(doc.fillDepth(0));
         } catch (Exception e) {
           logger.error("Could not add seed: {}", e.getMessage());
         }
@@ -422,13 +427,12 @@ public class CrawlController extends Configurable {
 
       WebURL webUrl = new WebURL();
       webUrl.setURL(canonicalUrl);
-      webUrl.setDocid(docId);
+      webUrl.setDocid(_doc.getId());
       webUrl.setDepth((short) 0);
       if (robotstxtServer.allows(webUrl)) {
         frontier.schedule(webUrl);
       } else {
-        logger.warn("Robots.txt does not allow this seed: {}",
-                    pageUrl); // using the WARN level here, as the user specifically asked to add this seed
+        logger.warn("Robots.txt does not allow this seed: {}", doc.getUrl()); // using the WARN level here, as the user specifically asked to add this seed
       }
     }
   }
@@ -455,7 +459,7 @@ public class CrawlController extends Configurable {
       logger.error("Invalid Url: {} (can't cannonicalize it!)", url);
     } else {
       try {
-        docIdServer.addUrlAndDocId(canonicalUrl, docId);
+        docIdServer.addUrlAndDocId(new DocRecord().fillId(docId).fillUrl(url));
       } catch (Exception e) {
         logger.error("Could not add seen url: {}", e.getMessage());
       }

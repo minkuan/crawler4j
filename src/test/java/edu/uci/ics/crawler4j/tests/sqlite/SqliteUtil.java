@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
@@ -17,8 +18,6 @@ import java.util.Map;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import edu.uci.ics.crawler4j.frontier.DocIDServer;
 
 /**
  * 
@@ -29,7 +28,7 @@ import edu.uci.ics.crawler4j.frontier.DocIDServer;
 public class SqliteUtil {
 
   /** LOGGER */
-  private static final Logger            LOGGER        = LoggerFactory.getLogger(DocIDServer.class);
+  private static final Logger            LOGGER        = LoggerFactory.getLogger(SqliteUtil.class);
 
   /** SQLITE driver */
   private static final String            SQLITE_DRIVER = "org.sqlite.JDBC";
@@ -108,10 +107,36 @@ public class SqliteUtil {
    * @param docsDbFullname
    * @return
    */
-  public static Connection getConnection(String docsDbFullname) {
+  public static Connection getConnection(final String docsDbFullname) {
     Connection conn = connMap.get(docsDbFullname);
     Assert.assertNotNull(docsDbFullname, conn);
     return conn;
+  }
+
+  /**
+   * 
+   * @param conn db connection
+   * @param tableName table name
+   * @return table records number
+   * @throws SQLException SQL ex
+   */
+  public static final int queryCount(final Connection conn, final String tableName)
+                                                                                   throws SQLException {
+    Statement stmt = null;
+    ResultSet rs = null;
+    int docCount = 0;
+    try {
+      stmt = conn.createStatement();
+      rs = stmt.executeQuery(String.format("SELECT COUNT(*) FROM %s", tableName));
+      while (rs.next()) {
+        docCount = rs.getInt(1);
+        break;
+      }
+    } finally {
+      rs.close();
+      stmt.close();
+    }
+    return docCount;
   }
 
 }

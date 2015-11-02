@@ -1,26 +1,30 @@
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package edu.uci.ics.crawler4j.url;
 
 import java.io.Serializable;
 
+import org.junit.Assert;
+
 import com.sleepycat.persist.model.Entity;
 import com.sleepycat.persist.model.PrimaryKey;
+
+import edu.uci.ics.crawler4j.frontier.DocRecord;
 
 /**
  * @author Yasser Ganjisaffar
@@ -32,19 +36,30 @@ public class WebURL implements Serializable {
   private static final long serialVersionUID = 1L;
 
   @PrimaryKey
-  private String url;
+  private String            url;
 
-  private int docid;
-  private int parentDocid;
-  private String parentUrl;
-  private short depth;
-  private String domain;
-  private String subDomain;
-  private String path;
-  private String anchor;
-  private byte priority;
-  private String tag;
+  private int               docid;
+  private int               parentDocid;
+  private String            parentUrl;
+  private short             depth;
+  private String            domain;
+  private String            subDomain;
+  private String            path;
+  private String            anchor;
+  private byte              priority;
+  private String            tag;
 
+  public static WebURL fromDocRecord(DocRecord doc) {
+    Assert.assertNotNull(doc);
+    WebURL webUrl = new WebURL();
+    webUrl.setDocid(doc.getId());
+    webUrl.setURL(doc.getUrl());
+    webUrl.setParentDocid(doc.getParentId());
+    webUrl.setParentUrl(doc.getParentUrl());
+    webUrl.setDepth(doc.getDepth());
+    webUrl.setAnchor(doc.getAnchor());
+    return webUrl;
+  }
 
   /**
    * @return unique document id assigned to this Url.

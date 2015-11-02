@@ -20,8 +20,8 @@ package edu.uci.ics.crawler4j.frontier;
 import static edu.uci.ics.crawler4j.frontier.DocsTable.CREATE_CLAUSE;
 import static edu.uci.ics.crawler4j.frontier.DocsTable.insertDoc;
 import static edu.uci.ics.crawler4j.tests.sqlite.SqliteUtil.ensureTableExists;
-import static edu.uci.ics.crawler4j.tests.sqlite.SqliteUtil.getConnection;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,24 +36,19 @@ import edu.uci.ics.crawler4j.crawler.CrawlConfig;
 import edu.uci.ics.crawler4j.tests.sqlite.SqliteUtil;
 
 /**
+ * 
+ * docId库：1. 存储所有发现的URL；2. 判断一个URL是否已经发现过。
+ * 
  * @author Yasser Ganjisaffar
  */
-
 @SuppressWarnings("javadoc")
 public class DocIDServer extends Configurable {
-  private static final Logger LOGGER           = LoggerFactory.getLogger(DocIDServer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(DocIDServer.class);
 
   // private final Database      docIDsDB;
   // private static final String DATABASE_NAME = "DocIDs";
 
-  /** DB full name */
-  private static final String DOCS_DB_FULLNAME = "jdbc:sqlite:docid.db";
-
-  private static final String DB_FILENAME      = "docid.db";
-
-  private static final String DOCS_TABLE       = "docs";
-
-  private final Object        mutex            = new Object();
+  private final Object        mutex  = new Object();
 
   private int                 lastDocID;
 
@@ -75,16 +70,16 @@ public class DocIDServer extends Configurable {
     //    }
 
     if (!config.isResumableCrawling()) {
-      SqliteUtil.deleteDbFileIfExists(DB_FILENAME);
+      SqliteUtil.deleteDbFileIfExists(getDbFilename());
     }
-    SqliteUtil.ensureDbConn(DOCS_DB_FULLNAME, config.isResumableCrawling());
-    SqliteUtil.ensureDbFileExists(DB_FILENAME);
+    SqliteUtil.ensureDbConn(getDbFullname(), config.isResumableCrawling());
+    SqliteUtil.ensureDbFileExists(getDbFilename());
     //    "CREATE TABLE IF NOT EXISTS %s " + "(ID INT PRIMARY KEY NOT NULL,"
     //    + " NAME TEXT NOT NULL, " + " AGE INT NOT NULL, "
     //    + " ADDRESS CHAR(50), " + " SALARY REAL)", TABLE_NAME
-    ensureTableExists(getConnection(DOCS_DB_FULLNAME), CREATE_CLAUSE);
+    ensureTableExists(getConnection(), String.format(CREATE_CLAUSE, getTablename()));
 
-    lastDocID = DocsTable.queryCount(getConnection(DOCS_DB_FULLNAME), DOCS_TABLE);
+    lastDocID = SqliteUtil.queryCount(getConnection(), getTablename());
     if (lastDocID > 0)
       if (LOGGER.isInfoEnabled())
         LOGGER.info("Loaded {} URLs that had been detected in previous crawl.", lastDocID);
@@ -105,8 +100,7 @@ public class DocIDServer extends Configurable {
         //        DatabaseEntry key = new DatabaseEntry(url.getBytes());
         //        result = docIDsDB.get(null, key, value, null);
 
-        DocRecord doc = DocsTable.queryByUrl(url, SqliteUtil.getConnection(DOCS_DB_FULLNAME),
-          DOCS_TABLE);
+        DocRecord doc = DocsTable.queryByUrl(url, getConnection(), getTablename());
         return doc; // possible to be null
 
       } catch (Exception e) {
@@ -130,11 +124,13 @@ public class DocIDServer extends Configurable {
       try {
         // Make sure that we have not already assigned a docid for this URL
         DocRecord doc = getDocRecord(inputDoc.getUrl());
-        if (doc == null) return null;
+        // if (doc == null) return null;
 
-        if (doc.getId() < 0) {
+        if (doc == null || doc.getId() < 0) {
           ++lastDocID;
-          insertDoc(getConnection(DOCS_DB_FULLNAME), doc.fillId(lastDocID));
+          // TODO 填属性
+          insertDoc(getConnection(), inputDoc.fillId(lastDocID), getTablename());
+          doc = inputDoc;
         }
         return doc;
       } catch (Exception e) {
@@ -152,8 +148,9 @@ public class DocIDServer extends Configurable {
       }
 
       // Make sure that we have not already assigned a docid for this URL
+      // 1. 判断是否已经存在
       DocRecord prevDoc = getDocRecord(doc.getUrl());
-      if (prevDoc.getId() > 0) {
+      if (prevDoc == null || prevDoc.getId() > 0) {
         // TODO 已经存在
         if (prevDoc.getId() == doc.getId()) {
           return;
@@ -163,10 +160,27 @@ public class DocIDServer extends Configurable {
 
       //      docIDsDB.put(null, new DatabaseEntry(url.getBytes()),
       //        new DatabaseEntry(Util.int2ByteArray(docId)));
-      DocsTable.insertDoc(SqliteUtil.getConnection(DOCS_DB_FULLNAME), doc);
+      // 2. 若不存在，则插入docId库。
+      DocsTable.insertDoc(getConnection(), doc, getTablename());
 
       lastDocID = doc.getId();
     }
+  }
+
+  public String getTablename() {
+    return "docs";
+  }
+
+  public String getDbFullname() {
+    return "jdbc:sqlite:" + getDbFilename();
+  }
+
+  public String getDbFilename() {
+    return "docid.db";
+  }
+
+  public Connection getConnection() {
+    return SqliteUtil.getConnection(getDbFullname());
   }
 
   public boolean isSeenBefore(String url) {
@@ -179,7 +193,7 @@ public class DocIDServer extends Configurable {
 
   public final int getDocCount() {
     try {
-      return DocsTable.queryCount(SqliteUtil.getConnection(DOCS_DB_FULLNAME), DOCS_TABLE);
+      return SqliteUtil.queryCount(getConnection(), getTablename());
       //      return (int) docIDsDB.count();
     } catch (SQLException e) {
       LOGGER.error("Exception thrown while getting DOC Count", e);
@@ -190,7 +204,7 @@ public class DocIDServer extends Configurable {
   public void close() {
     try {
       // docIDsDB.close();
-      SqliteUtil.getConnection(DOCS_DB_FULLNAME).close();
+      getConnection().close();
     } catch (SQLException e) {
       LOGGER.error("Exception thrown while closing DocIDServer", e);
     }

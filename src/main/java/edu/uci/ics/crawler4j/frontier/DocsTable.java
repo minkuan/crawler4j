@@ -25,62 +25,39 @@ import org.junit.Assert;
 public class DocsTable {
 
   /** create clause */
-  public static final String CREATE_CLAUSE     = "CREATE TABLE IF NOT EXISTS DOCS ("
-                                                 + "ID INT PRIMARY KEY NOT NULL, "
-                                                 + "URL TEXT NOT NULL, "
-                                                 + "PARENT_ID INT NOT NULL, "
-                                                 + "PARENT_URL TEXT NOT NULL, "
-                                                 + "DEPTH INT NOT NULL, " + "STATE INT NOT NULL, "
-                                                 + "GMT_MODIFIED INT NOT NULL" + ")";
+  // TODO ´ý´´½¨urlË÷Òý
+  public static final String CREATE_CLAUSE  = "CREATE TABLE IF NOT EXISTS %s ("
+                                              + "ID INT PRIMARY KEY NOT NULL, "
+                                              + "URL TEXT NOT NULL, " + "PARENT_ID INT NOT NULL, "
+                                              + "PARENT_URL TEXT DEFAULT NULL, "
+                                              + "DEPTH INT NOT NULL, "
+                                              + "ANCHOR TEXT DEFAULT NULL, "
+                                              + "STATE INT NOT NULL, "
+                                              + "GMT_MODIFIED INT NOT NULL" + ")";
 
   /** id column */
-  public static final String COL_ID_0          = "ID";
+  public static final String C1_ID          = "ID";
 
   /** url column */
-  public static final String COL_URL_1         = "URL";
+  public static final String C2_URL         = "URL";
 
   /** parent id column */
-  public static final String COL_PARENT_ID_2   = "PARENT_ID";
+  public static final String C3_PARENT_ID   = "PARENT_ID";
 
   /** parent url column */
-  public static final String COL_PARENT_URL_3  = "PARENT_URL";
+  public static final String C4_PARENT_URL  = "PARENT_URL";
 
   /** depth column */
-  public static final String COL_DEPTH_4       = "DEPTH";
+  public static final String C5_DEPTH       = "DEPTH";
 
   /**  */
-  public static final String COL_ANCHOR_5      = "ANCHOR";
+  public static final String C6_ANCHOR      = "ANCHOR";
 
   /** state column */
-  public static final String COL_STATE_6       = "STATE";
+  public static final String C7_STATE       = "STATE";
 
   /** gmtmodified column */
-  public static final String COL_GMTMODIFIED_7 = "GMT_MODIFIED";
-
-  /**
-   * 
-   * @param conn db connection
-   * @param tableName table name
-   * @return table records number
-   * @throws SQLException SQL ex
-   */
-  public static final int queryCount(final Connection conn, String tableName) throws SQLException {
-    Statement stmt = null;
-    ResultSet rs = null;
-    int docCount = 0;
-    try {
-      stmt = conn.createStatement();
-      rs = stmt.executeQuery(String.format("SELECT COUNT(*) FROM %s", tableName));
-      while (rs.next()) {
-        docCount = rs.getInt(0);
-        break;
-      }
-    } finally {
-      rs.close();
-      stmt.close();
-    }
-    return docCount;
-  }
+  public static final String C8_GMTMODIFIED = "GMT_MODIFIED";
 
   /**
    * 
@@ -99,13 +76,15 @@ public class DocsTable {
     ResultSet rs = null;
     try {
       stmt = conn.createStatement();
-      rs = stmt.executeQuery(String.format("SELECT * FROM %s WHERE URL=%s", tableName, url));
+      rs = stmt.executeQuery(String.format("SELECT * FROM %s WHERE URL='%s'", tableName, url));
       while (rs.next()) {
-        return new DocRecord().fillId(rs.getInt(0)).fillUrl(rs.getString(1))
-          .fillParentId(rs.getInt(2)).fillParentUrl(rs.getString(3)).fillDepth(rs.getInt(4));
+        return new DocRecord().fillId(rs.getInt(C1_ID)).fillUrl(rs.getString(C2_URL))
+          .fillParentId(rs.getInt(C3_PARENT_ID)).fillParentUrl(rs.getString(C4_PARENT_URL))
+          .fillDepth(rs.getShort(C5_DEPTH)).fillAnchor(rs.getString(C6_ANCHOR))
+          .fillGmtModified(rs.getLong(C8_GMTMODIFIED));
       }
     } finally {
-      rs.close();
+      if (rs != null) rs.close();
       stmt.close();
     }
 
@@ -117,9 +96,11 @@ public class DocsTable {
    * 
    * @param conn db connection
    * @param doc doc record
+   * @param tableName 
    * @throws SQLException SQL ex 
    */
-  public static void insertDoc(final Connection conn, final DocRecord doc) throws SQLException {
+  public static void insertDoc(final Connection conn, final DocRecord doc, final String tableName)
+                                                                                                  throws SQLException {
 
     Assert.assertTrue(conn != null && doc != null);
     doc.assertValid();
@@ -130,20 +111,22 @@ public class DocsTable {
       stmt = conn.createStatement();
 
       StringBuffer sb = new StringBuffer();
-      sb.append("INSERT INTO DOCS(").append(COL_ID_0).append(",");
-      sb.append(COL_URL_1).append(",");
-      if (doc.getParentId() > 0) sb.append(COL_PARENT_ID_2).append(",");
-      if (StringUtils.isNotBlank(doc.getParentUrl())) sb.append(COL_PARENT_URL_3).append(",");
-      if (doc.getDepth() > 0) sb.append(COL_DEPTH_4).append(",");
-      if (StringUtils.isNotBlank(doc.getAnchor())) sb.append(COL_ANCHOR_5).append(",");
-      sb.append(COL_STATE_6).append(",");
-      sb.append(COL_GMTMODIFIED_7);
+      sb.append("INSERT INTO ").append(tableName).append("(").append(C1_ID).append(",");
+      sb.append(C2_URL).append(",");
+      /* if (doc.getParentId() > 0) */sb.append(C3_PARENT_ID).append(",");
+      if (StringUtils.isNotBlank(doc.getParentUrl())) sb.append(C4_PARENT_URL).append(",");
+      /* if (doc.getDepth() > 0) */sb.append(C5_DEPTH).append(",");
+      if (StringUtils.isNotBlank(doc.getAnchor())) sb.append(C6_ANCHOR).append(",");
+      sb.append(C7_STATE).append(",");
+      sb.append(C8_GMTMODIFIED);
       sb.append(") VALUES(");
-      sb.append(doc.getId()).append(",").append(doc.getUrl()).append(",");
-      if (doc.getParentId() > 0) sb.append(doc.getParentId()).append(",");
-      if (StringUtils.isNotBlank(doc.getParentUrl())) sb.append(doc.getParentUrl()).append(",");
-      if (doc.getDepth() > 0) sb.append(doc.getDepth()).append(",");
-      if (StringUtils.isNotBlank(doc.getAnchor())) sb.append(doc.getAnchor()).append(",");
+      sb.append(doc.getId()).append(",'").append(doc.getUrl()).append("',");
+      /* if (doc.getParentId() > 0) */sb.append(doc.getParentId()).append(",");
+      if (StringUtils.isNotBlank(doc.getParentUrl()))
+        sb.append("'").append(doc.getParentUrl()).append("',");
+      /* if (doc.getDepth() > 0) */sb.append(doc.getDepth()).append(",");
+      if (StringUtils.isNotBlank(doc.getAnchor()))
+        sb.append("'").append(doc.getAnchor()).append("',");
       sb.append(DocState.INIT.getCode()).append(",");
       sb.append(System.currentTimeMillis());
       sb.append(")");

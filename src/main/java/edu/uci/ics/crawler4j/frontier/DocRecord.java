@@ -9,6 +9,9 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.junit.Assert;
+
+import edu.uci.ics.crawler4j.url.WebURL;
 
 /**
    * 
@@ -31,7 +34,7 @@ public class DocRecord {
   private String   parentUrl = null;
 
   /**  */
-  private int      depth     = -1;
+  private short    depth     = -1;
 
   /**  */
   private String   anchor    = null;
@@ -137,7 +140,7 @@ public class DocRecord {
    * 
    * @return property value of depth
    */
-  public int getDepth() {
+  public short getDepth() {
     return depth;
   }
 
@@ -147,7 +150,7 @@ public class DocRecord {
    * @param depth value to be assigned to property depth
    * @return doc record
    */
-  public DocRecord fillDepth(int depth) {
+  public DocRecord fillDepth(short depth) {
     this.depth = depth;
     return this;
   }
@@ -209,6 +212,24 @@ public class DocRecord {
   public DocRecord fillAnchor(String anchor) {
     this.anchor = anchor;
     return this;
+  }
+
+  public static DocRecord fromWebUrl(WebURL url) {
+    return new DocRecord().fillId(url.getDocid()).fillUrl(url.getURL())
+      .fillParentId(url.getParentDocid()).fillParentUrl(url.getParentUrl())
+      .fillAnchor(url.getAnchor()).fillDepth(url.getDepth());
+  }
+
+  public static WebURL toWebUrl(DocRecord doc) {
+    Assert.assertNotNull(doc);
+    WebURL webUrl = new WebURL();
+    webUrl.setDocid(doc.getId());
+    webUrl.setURL(doc.getUrl());
+    webUrl.setParentDocid(doc.getParentId());
+    webUrl.setParentUrl(doc.getParentUrl());
+    webUrl.setDepth(doc.getDepth());
+    webUrl.setAnchor(doc.getAnchor());
+    return webUrl;
   }
 
   /** 

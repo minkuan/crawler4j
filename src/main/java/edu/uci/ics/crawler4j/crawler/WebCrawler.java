@@ -18,11 +18,13 @@
 package edu.uci.ics.crawler4j.crawler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.impl.EnglishReasonPhraseCatalog;
+import org.junit.Assert;
 
 import uk.org.lidalia.slf4jext.Level;
 import uk.org.lidalia.slf4jext.Logger;
@@ -50,6 +52,7 @@ import edu.uci.ics.crawler4j.url.WebURL;
  */
 public class WebCrawler implements Runnable {
 
+  /**  */
   protected static final Logger logger = LoggerFactory.getLogger(WebCrawler.class);
 
   /**
@@ -319,20 +322,22 @@ public class WebCrawler implements Runnable {
   }
 
   private void processPage(WebURL curURL) {
+    Assert.assertNotNull(curURL);
     PageFetchResult fetchResult = null;
     try {
-      if (curURL == null) {
-        throw new Exception("Failed processing a NULL url !?");
-      }
-
+      // 1. 抓取curUrl
       fetchResult = pageFetcher.fetchPage(curURL);
       int statusCode = fetchResult.getStatusCode();
       handlePageStatusCode(curURL, statusCode,
         EnglishReasonPhraseCatalog.INSTANCE.getReason(statusCode, Locale.ENGLISH)); // Finds the status reason for all known statuses
 
+      // 1.1. 将抓取到的内容填充到Page对象
       Page page = new Page(curURL);
       page.setFetchResponseHeaders(fetchResult.getResponseHeaders());
       page.setStatusCode(statusCode);
+
+      // 2. 处理抓取结果
+      // 2.1. 跳转
       if (statusCode < 200 || statusCode > 299) { // Not 2XX: 2XX status codes indicate success
         if (statusCode == HttpStatus.SC_MOVED_PERMANENTLY
             || statusCode == HttpStatus.SC_MOVED_TEMPORARILY
@@ -343,14 +348,13 @@ public class WebCrawler implements Runnable {
           page.setRedirect(true);
           if (myController.getConfig().isFollowRedirects()) {
             String movedToUrl = fetchResult.getMovedToUrl();
-            if (movedToUrl == null) {
-              throw new RedirectException(Level.WARN, "Unexpected error, URL: " + curURL
-                                                      + " is redirected to NOTHING");
-            }
+            Assert.assertNotNull("Unexpected error, URL: " + curURL + " is redirected to NOTHING",
+              movedToUrl);
             page.setRedirectedToUrl(movedToUrl);
 
+            // 2.1.1. 跳转链接是否重复发现？
             DocRecord newDoc = docIdServer.getDocRecord(movedToUrl);
-            if (newDoc.getId() > 0) {
+            if (newDoc != null && newDoc.getId() > 0) {
               throw new RedirectException(Level.DEBUG, "Redirect page: " + curURL
                                                        + " is already seen");
             }
@@ -364,12 +368,13 @@ public class WebCrawler implements Runnable {
             webURL.setAnchor(curURL.getAnchor());
             if (shouldVisit(page, webURL)) {
               if (robotstxtServer.allows(webURL)) {
+                // 非重复发现的跳转链接加入docId库，并为它调度抓取
                 webURL.setDocid(docIdServer.genNewDocRecordIfNotExists(
                   new DocRecord().fillAnchor(webURL.getAnchor()).fillDepth(webURL.getDepth())
                     .fillUrl(webURL.getURL()).fillParentId(webURL.getParentDocid())
                     .fillAnchor(webURL.getAnchor()).fillState(DocState.FETCHED)
                     .fillParentUrl(webURL.getParentUrl())).getId());
-                frontier.schedule(webURL);
+                frontier.scheduleAll(Arrays.asList(webURL));
               } else {
                 logger.debug("Not visiting: {} as per the server's \"robots.txt\" policy",
                   webURL.getURL());
@@ -388,6 +393,7 @@ public class WebCrawler implements Runnable {
         }
 
       } else { // if status code is 200
+        // 实际抓到的URL与指定抓取的URL不一致，则以实际为准。
         if (!curURL.getURL().equals(fetchResult.getFetchedUrl())) {
           if (docIdServer.isSeenBefore(fetchResult.getFetchedUrl())) {
             throw new RedirectException(Level.DEBUG, "Redirect page: " + curURL
@@ -411,19 +417,22 @@ public class WebCrawler implements Runnable {
           webURL.setParentDocid(curURL.getDocid());
           webURL.setParentUrl(curURL.getURL());
           DocRecord newdoc = docIdServer.getDocRecord(webURL.getURL());
-          if (newdoc.getId() > 0) {
+
+          if (newdoc != null && newdoc.getId() > 0) {
             // This is not the first time that this Url is visited. So, we set the depth to a negative number.
             webURL.setDepth((short) -1);
             webURL.setDocid(newdoc.getId());
           } else {
             webURL.setDocid(-1);
             webURL.setDepth((short) (curURL.getDepth() + 1));
-            if ((maxCrawlDepth == -1) || (curURL.getDepth() < maxCrawlDepth)) {
+            if ((maxCrawlDepth == -1) || (webURL.getDepth() < maxCrawlDepth)) {
               if (shouldVisit(page, webURL)) {
                 if (robotstxtServer.allows(webURL)) {
+                  // 将从未发现过的内嵌外链加入docId库，并为它调度抓取。
                   webURL.setDocid(docIdServer.genNewDocRecordIfNotExists(
-                    new DocRecord().fillUrl(webURL.getURL()).fillParentId(webURL.getParentDocid())
-                      .fillDepth(webURL.getDepth()).fillParentUrl(webURL.getParentUrl())).getId());
+                    new DocRecord().fillUrl(webURL.getURL()).fillAnchor(webURL.getAnchor())
+                      .fillParentId(webURL.getParentDocid()).fillDepth(webURL.getDepth())
+                      .fillParentUrl(webURL.getParentUrl())).getId());
                   toSchedule.add(webURL);
                 } else {
                   logger.debug("Not visiting: {} as per the server's \"robots.txt\" policy",

@@ -1,18 +1,18 @@
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package edu.uci.ics.crawler4j.frontier;
@@ -48,10 +48,10 @@ public class Counters extends Configurable {
   }
 
   private static final String DATABASE_NAME = "Statistics";
-  protected Database statisticsDB = null;
-  protected Environment env;
+  protected Database          statisticsDB  = null;
+  protected Environment       env;
 
-  protected final Object mutex = new Object();
+  protected final Object      mutex         = new Object();
 
   protected Map<String, Long> counterValues;
 
@@ -62,9 +62,9 @@ public class Counters extends Configurable {
     this.counterValues = new HashMap<>();
 
     /*
-     * When crawling is set to be resumable, we have to keep the statistics
-     * in a transactional database to make sure they are not lost if crawler
-     * is crashed or terminated unexpectedly.
+     * When crawling is set to be resumable, we have to keep the statistics in a
+     * transactional database to make sure they are not lost if crawler is
+     * crashed or terminated unexpectedly.
      */
     if (config.isResumableCrawling()) {
       DatabaseConfig dbConfig = new DatabaseConfig();
@@ -109,7 +109,8 @@ public class Counters extends Configurable {
         counterValues.put(name, value);
         if (statisticsDB != null) {
           Transaction txn = env.beginTransaction(null, null);
-          statisticsDB.put(txn, new DatabaseEntry(name.getBytes()), new DatabaseEntry(Util.long2ByteArray(value)));
+          statisticsDB.put(txn, new DatabaseEntry(name.getBytes()),
+            new DatabaseEntry(Util.long2ByteArray(value)));
           txn.commit();
         }
       } catch (Exception e) {

@@ -325,19 +325,19 @@ public class WebCrawler implements Runnable {
     Assert.assertNotNull(curURL);
     PageFetchResult fetchResult = null;
     try {
-      // 1. ×¥È¡curUrl
+      // 1. æŠ“å–curUrl
       fetchResult = pageFetcher.fetchPage(curURL);
       int statusCode = fetchResult.getStatusCode();
       handlePageStatusCode(curURL, statusCode,
         EnglishReasonPhraseCatalog.INSTANCE.getReason(statusCode, Locale.ENGLISH)); // Finds the status reason for all known statuses
 
-      // 1.1. ½«×¥È¡µ½µÄÄÚÈİÌî³äµ½Page¶ÔÏó
+      // 1.1. å°†æŠ“å–åˆ°çš„å†…å®¹å¡«å……åˆ°Pageå¯¹è±¡
       Page page = new Page(curURL);
       page.setFetchResponseHeaders(fetchResult.getResponseHeaders());
       page.setStatusCode(statusCode);
 
-      // 2. ´¦Àí×¥È¡½á¹û
-      // 2.1. Ìø×ª
+      // 2. å¤„ç†æŠ“å–ç»“æœ
+      // 2.1. è·³è½¬
       if (statusCode < 200 || statusCode > 299) { // Not 2XX: 2XX status codes indicate success
         if (statusCode == HttpStatus.SC_MOVED_PERMANENTLY
             || statusCode == HttpStatus.SC_MOVED_TEMPORARILY
@@ -352,7 +352,7 @@ public class WebCrawler implements Runnable {
               movedToUrl);
             page.setRedirectedToUrl(movedToUrl);
 
-            // 2.1.1. Ìø×ªÁ´½ÓÊÇ·ñÖØ¸´·¢ÏÖ£¿
+            // 2.1.1. è·³è½¬é“¾æ¥æ˜¯å¦é‡å¤å‘ç°ï¼Ÿ
             DocRecord newDoc = docIdServer.getDocRecord(movedToUrl);
             if (newDoc != null && newDoc.getId() > 0) {
               throw new RedirectException(Level.DEBUG, "Redirect page: " + curURL
@@ -368,7 +368,7 @@ public class WebCrawler implements Runnable {
             webURL.setAnchor(curURL.getAnchor());
             if (shouldVisit(page, webURL)) {
               if (robotstxtServer.allows(webURL)) {
-                // ·ÇÖØ¸´·¢ÏÖµÄÌø×ªÁ´½Ó¼ÓÈëdocId¿â£¬²¢ÎªËüµ÷¶È×¥È¡
+                // éé‡å¤å‘ç°çš„è·³è½¬é“¾æ¥åŠ å…¥docIdåº“ï¼Œå¹¶ä¸ºå®ƒè°ƒåº¦æŠ“å–
                 webURL.setDocid(docIdServer.genNewDocRecordIfNotExists(
                   new DocRecord().fillAnchor(webURL.getAnchor()).fillDepth(webURL.getDepth())
                     .fillUrl(webURL.getURL()).fillParentId(webURL.getParentDocid())
@@ -393,7 +393,7 @@ public class WebCrawler implements Runnable {
         }
 
       } else { // if status code is 200
-        // Êµ¼Ê×¥µ½µÄURLÓëÖ¸¶¨×¥È¡µÄURL²»Ò»ÖÂ£¬ÔòÒÔÊµ¼ÊÎª×¼¡£
+        // å®é™…æŠ“åˆ°çš„URLä¸æŒ‡å®šæŠ“å–çš„URLä¸ä¸€è‡´ï¼Œåˆ™ä»¥å®é™…ä¸ºå‡†ã€‚
         if (!curURL.getURL().equals(fetchResult.getFetchedUrl())) {
           if (docIdServer.isSeenBefore(fetchResult.getFetchedUrl())) {
             throw new RedirectException(Level.DEBUG, "Redirect page: " + curURL
@@ -428,7 +428,7 @@ public class WebCrawler implements Runnable {
             if ((maxCrawlDepth == -1) || (webURL.getDepth() < maxCrawlDepth)) {
               if (shouldVisit(page, webURL)) {
                 if (robotstxtServer.allows(webURL)) {
-                  // ½«´ÓÎ´·¢ÏÖ¹ıµÄÄÚÇ¶ÍâÁ´¼ÓÈëdocId¿â£¬²¢ÎªËüµ÷¶È×¥È¡¡£
+                  // å°†ä»æœªå‘ç°è¿‡çš„å†…åµŒå¤–é“¾åŠ å…¥docIdåº“ï¼Œå¹¶ä¸ºå®ƒè°ƒåº¦æŠ“å–ã€‚
                   webURL.setDocid(docIdServer.genNewDocRecordIfNotExists(
                     new DocRecord().fillUrl(webURL.getURL()).fillAnchor(webURL.getAnchor())
                       .fillParentId(webURL.getParentDocid()).fillDepth(webURL.getDepth())

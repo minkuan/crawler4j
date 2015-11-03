@@ -116,7 +116,7 @@ public class WorkQueues {
   //  }
 
   /**
-   * ÅúÁ¿È¡max¸öURL
+   * æ‰¹é‡å–maxä¸ªURL
    * 
    * @param max
    * @return
@@ -142,7 +142,7 @@ public class WorkQueues {
       //      commit(txn);
       //      return results;
 
-      // 1. ²é³ö×î´óÉî¶È
+      // 1. æŸ¥å‡ºæœ€å¤§æ·±åº¦
       Statement stmt = getConnection().createStatement();
       ResultSet rs = stmt.executeQuery("SELECT MAX(DEPTH) FROM " + getTablename());
       short maxDepth = -1;
@@ -151,13 +151,13 @@ public class WorkQueues {
         break;
       }
       rs.close();
-      // 2. È¡³ö×î´óÉî¶ÈµÄ50Ìõ¼ÇÂ¼
+      // 2. å–å‡ºæœ€å¤§æ·±åº¦çš„50æ¡è®°å½•
       rs = stmt
         .executeQuery("SELECT ID,URL,PARENT_ID,PARENT_URL,DEPTH,ANCHOR,STATE,GMT_MODIFIED FROM "
                       + getTablename() + " WHERE DEPTH=" + maxDepth + " LIMIT 50");
       List<WebURL> urlList = new ArrayList<>();
       while (rs.next()) {
-        // TODO ×Ö¶ÎÌîÂú
+        // TODO å­—æ®µå¡«æ»¡
         urlList.add(WebURL.fromDocRecord(new DocRecord().fillId(rs.getInt(DocsTable.C1_ID))
           .fillUrl(rs.getString(DocsTable.C2_URL)).fillParentId(rs.getInt(DocsTable.C3_PARENT_ID))
           .fillParentUrl(rs.getString(DocsTable.C4_PARENT_URL))

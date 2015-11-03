@@ -42,7 +42,7 @@ public class Frontier extends Configurable {
   private static final String   DATABASE_NAME                    = "PendingURLsDB";
   private static final int      IN_PROCESS_RESCHEDULE_BATCH_SIZE = 100;
 
-  /** ´ı×¥È¡URLµÄ¶ÓÁĞ */
+  /** å¾…æŠ“å–URLçš„é˜Ÿåˆ— */
   protected WorkQueues          workQueues;
 
   protected InProcessPagesDB    inProcessPages;
@@ -89,7 +89,7 @@ public class Frontier extends Configurable {
   }
 
   /**
-   * ½«<tt>urls</tt>ÁĞ±í¼ÓÈë{@link #workQueues}¡£
+   * å°†<tt>urls</tt>åˆ—è¡¨åŠ å…¥{@link #workQueues}ã€‚
    * 
    * @param urls
    */
@@ -114,7 +114,7 @@ public class Frontier extends Configurable {
       }
       if (newScheduledPage > 0) {
         scheduledPages += newScheduledPage;
-        // ÒÑµ÷¶È×¥È¡¼ÆÊı
+        // å·²è°ƒåº¦æŠ“å–è®¡æ•°
         counters.increment(Counters.ReservedCounterNames.SCHEDULED_PAGES, newScheduledPage);
       }
       synchronized (waitingList) {
@@ -147,7 +147,7 @@ public class Frontier extends Configurable {
           return;
         }
         try {
-          // È¡³ö50¸ö´ı×¥È¡URL½øĞĞ×¥È¡£¬²¢½«ËüÃÇ´Ó´ı×¥È¡¶ÓÁĞÉ¾³ı¡£
+          // å–å‡º50ä¸ªå¾…æŠ“å–URLè¿›è¡ŒæŠ“å–ï¼Œå¹¶å°†å®ƒä»¬ä»å¾…æŠ“å–é˜Ÿåˆ—åˆ é™¤ã€‚
           List<WebURL> curResults = workQueues.get(max);
           if (CollectionUtils.isNotEmpty(curResults)) workQueues.delete(curResults);
           if (inProcessPages != null) {

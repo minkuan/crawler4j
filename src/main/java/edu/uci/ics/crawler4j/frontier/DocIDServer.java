@@ -37,7 +37,7 @@ import edu.uci.ics.crawler4j.tests.sqlite.SqliteUtil;
 
 /**
  * 
- * docId¿â£º1. ´æ´¢ËùÓĞ·¢ÏÖµÄURL£»2. ÅĞ¶ÏÒ»¸öURLÊÇ·ñÒÑ¾­·¢ÏÖ¹ı¡£
+ * docIdåº“ï¼š1. å­˜å‚¨æ‰€æœ‰å‘ç°çš„URLï¼›2. åˆ¤æ–­ä¸€ä¸ªURLæ˜¯å¦å·²ç»å‘ç°è¿‡ã€‚
  * 
  * @author Yasser Ganjisaffar
  */
@@ -128,7 +128,7 @@ public class DocIDServer extends Configurable {
 
         if (doc == null || doc.getId() < 0) {
           ++lastDocID;
-          // TODO ÌîÊôĞÔ
+          // TODO å¡«å±æ€§
           insertDoc(getConnection(), inputDoc.fillId(lastDocID), getTablename());
           doc = inputDoc;
         }
@@ -148,10 +148,10 @@ public class DocIDServer extends Configurable {
       }
 
       // Make sure that we have not already assigned a docid for this URL
-      // 1. ÅĞ¶ÏÊÇ·ñÒÑ¾­´æÔÚ
+      // 1. åˆ¤æ–­æ˜¯å¦å·²ç»å­˜åœ¨
       DocRecord prevDoc = getDocRecord(doc.getUrl());
       if (prevDoc == null || prevDoc.getId() > 0) {
-        // TODO ÒÑ¾­´æÔÚ
+        // TODO å·²ç»å­˜åœ¨
         if (prevDoc.getId() == doc.getId()) {
           return;
         }
@@ -160,7 +160,7 @@ public class DocIDServer extends Configurable {
 
       //      docIDsDB.put(null, new DatabaseEntry(url.getBytes()),
       //        new DatabaseEntry(Util.int2ByteArray(docId)));
-      // 2. Èô²»´æÔÚ£¬Ôò²åÈëdocId¿â¡£
+      // 2. è‹¥ä¸å­˜åœ¨ï¼Œåˆ™æ’å…¥docIdåº“ã€‚
       DocsTable.insertDoc(getConnection(), doc, getTablename());
 
       lastDocID = doc.getId();

@@ -16,10 +16,10 @@ public enum DocState {
   INIT(0, "INIT"),
 
   /**  */
-  DOWNLOADING(1, "DOWNLOADING"),
+  SCHEDULED(1, "SCHEDULED"),
 
   /**  */
-  FETCHED(2, "DOWNLOADED");
+  FETCHED(2, "FETCHED");
 
   /** code */
   private int    code;

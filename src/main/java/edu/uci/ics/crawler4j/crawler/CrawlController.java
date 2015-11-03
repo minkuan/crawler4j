@@ -411,23 +411,23 @@ public class CrawlController extends Configurable {
    *
    */
   public void addSeed(final DocRecord doc) {
-    Assert.assertEquals(-1, doc.getId()); // ¼ÓÈëÖÖ×ÓÊ±docId±ØÎª-1.
+    Assert.assertEquals(-1, doc.getId()); // åŠ å…¥ç§å­æ—¶docIdå¿…ä¸º-1.
     String canonicalUrl = URLCanonicalizer.getCanonicalURL(doc.getUrl());
     Assert.assertNotNull(canonicalUrl);
 
     doc.fillUrl(canonicalUrl);
     DocRecord _doc = null;
     if (doc.getId() < 0) { // always TRUE
-      // 1. ÅĞ¶Ïdoc£¨url£©ÔÚdocId¿âÊÇ·ñÒÑ¾­´æÔÚ
+      // 1. åˆ¤æ–­docï¼ˆurlï¼‰åœ¨docIdåº“æ˜¯å¦å·²ç»å­˜åœ¨
       _doc = docIdServer.getDocRecord(doc.getUrl());
-      // Õâ¾ÍÒªÇódocId´æÔÚÊ±£¬ÅĞ¶ÏËüµÄÊ±¼ä´Á¡£ÁíÍâ¡°Éî¶ÈÓÅÏÈ¡±»¹ÒªÇóÅĞ¶ÏÉî¶È»òparentUrl¡£Òò´ËBDB²»ÊÊºÏÓÃÓÚ´æ´¢frontier¡£
+      // è¿™å°±è¦æ±‚docIdå­˜åœ¨æ—¶ï¼Œåˆ¤æ–­å®ƒçš„æ—¶é—´æˆ³ã€‚å¦å¤–â€œæ·±åº¦ä¼˜å…ˆâ€è¿˜è¦æ±‚åˆ¤æ–­æ·±åº¦æˆ–parentUrlã€‚å› æ­¤BDBä¸é€‚åˆç”¨äºå­˜å‚¨frontierã€‚
       if (_doc != null && _doc.getId() > 0) {
-        // TODO ÒÑÏÂÔØÄÚÈİÒ²¿ÉÄÜĞèÒª¸üĞÂ£¨±ÈÈçindex.htmlĞÂ¼ÓÄÚÇ¶Á´½Ó£©
+        // TODO å·²ä¸‹è½½å†…å®¹ä¹Ÿå¯èƒ½éœ€è¦æ›´æ–°ï¼ˆæ¯”å¦‚index.htmlæ–°åŠ å†…åµŒé“¾æ¥ï¼‰
         LOGGER.trace("This URL is already seen:{}", _doc);
         return;
       }
 
-      // 2. Èô²»´æÔÚÔò²åÈëdocId¿â
+      // 2. è‹¥ä¸å­˜åœ¨åˆ™æ’å…¥docIdåº“
       _doc = docIdServer.genNewDocRecordIfNotExists(doc);
 
       doc.fillId(_doc.getId());

@@ -15,6 +15,8 @@ import java.sql.Statement;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -24,8 +26,11 @@ import org.junit.Assert;
  */
 public class DocsTable {
 
+  /** LOGGER */
+  static final Logger        LOGGER         = LoggerFactory.getLogger(DocsTable.class);
+
   /** create clause */
-  // TODO ´ý´´½¨urlË÷Òý
+  // TODO å¾…åˆ›å»ºurlç´¢å¼•
   public static final String CREATE_CLAUSE  = "CREATE TABLE IF NOT EXISTS %s ("
                                               + "ID INT PRIMARY KEY NOT NULL, "
                                               + "URL TEXT NOT NULL, " + "PARENT_ID INT NOT NULL, "
@@ -106,11 +111,11 @@ public class DocsTable {
     doc.assertValid();
 
     Statement stmt = null;
+    StringBuffer sb = new StringBuffer();
     int rc = -1;
     try {
       stmt = conn.createStatement();
 
-      StringBuffer sb = new StringBuffer();
       sb.append("INSERT INTO ").append(tableName).append("(").append(C1_ID).append(",");
       sb.append(C2_URL).append(",");
       /* if (doc.getParentId() > 0) */sb.append(C3_PARENT_ID).append(",");
@@ -133,6 +138,9 @@ public class DocsTable {
 
       rc = stmt.executeUpdate(sb.toString());
       assertEquals(1, rc);
+    } catch (Exception e) {
+      LOGGER.error("sql:" + sb.toString(), e);
+      throw e;
     } finally {
       stmt.close();
     }

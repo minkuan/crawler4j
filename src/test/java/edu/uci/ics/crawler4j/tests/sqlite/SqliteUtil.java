@@ -88,6 +88,7 @@ public class SqliteUtil {
   public static void ensureDbFileExists(String dbFilename) {
     File file = new File(dbFilename);
     assertTrue(file.getAbsolutePath(), file.exists());
+    if (LOGGER.isInfoEnabled()) LOGGER.info("db file {} exists", file.getAbsolutePath());
   }
 
   /**
